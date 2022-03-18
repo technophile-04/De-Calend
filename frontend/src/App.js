@@ -1,15 +1,15 @@
-import detectEthereumProvider from '@metamask/detect-provider';
+// import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
 import Calender from './components/Calender';
+
+const { ethereum } = window;
 
 function App() {
 	const [account, setAccount] = useState('');
 
 	const handleClick = async () => {
 		try {
-			const provider = await detectEthereumProvider();
-
-			const accounts = await provider.request({
+			const accounts = await ethereum.request({
 				method: 'eth_requestAccounts',
 			});
 
@@ -20,14 +20,14 @@ function App() {
 				console.log('No account found');
 			}
 		} catch (error) {
-			console.log(error);
+			console.log(error.message);
 		}
 	};
 
 	const isConnected = async () => {
-		const provider = await detectEthereumProvider();
-		if (provider) {
-			const accounts = await provider.request({ method: 'eth_accounts' });
+		if (ethereum) {
+			// const provider = new ethers.providers.Web3Provider(ethereum);
+			const accounts = await ethereum.request({ method: 'eth_accounts' });
 			if (accounts.length > 0) {
 				setAccount(accounts[0]);
 			} else {
@@ -54,7 +54,7 @@ function App() {
 					Connect Wallet
 				</button>
 			)}
-			{account && <Calender />}
+			{account && <Calender account={account} />}
 		</div>
 	);
 }

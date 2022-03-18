@@ -1,32 +1,41 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
-const hre = require("hardhat");
+const hre = require('hardhat');
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
+	const DeCalend = await hre.ethers.getContractFactory('DeCalend');
+	const deCalend = await DeCalend.deploy();
 
-  // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+	await deCalend.deployed();
 
-  await greeter.deployed();
+	console.log('DeCalend deployed to:', deCalend.address);
 
-  console.log("Greeter deployed to:", greeter.address);
+	saveFrontendFiles(deCalend.address);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
+function saveFrontendFiles(contractAddress) {
+	const fs = require('fs');
+
+	const contractsDir = __dirname + '/../frontend/src/contracts';
+
+	if (!fs.existsSync(contractsDir)) {
+		fs.mkdirSync(contractsDir);
+	}
+
+	fs.writeFileSync(
+		contractsDir + '/contract-address.json',
+		JSON.stringify({ contractAddress: contractAddress }, undefined, 2)
+	);
+
+	const DeCalend = artifacts.readArtifactSync('DeCalend');
+
+	fs.writeFileSync(
+		contractsDir + '/DeCalend.json',
+		JSON.stringify(DeCalend, null, 2)
+	);
+}
+
 main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+	.then(() => process.exit(0))
+	.catch((error) => {
+		console.error(error);
+		process.exit(1);
+	});
