@@ -17,6 +17,7 @@ import React, { useEffect, useState } from 'react';
 import { getContractReadOnly, getContractWrite } from '../utils';
 import Admin from './Admin';
 import { ethers } from 'ethers';
+import contract from '../contracts/DeCalend.json';
 
 const Calender = ({ account }) => {
 	const [isAdmin, setIsAdmin] = useState(false);
@@ -26,6 +27,7 @@ const Calender = ({ account }) => {
 	const [showDialog, setShowDialog] = useState(false);
 	const [showSign, setShowSign] = useState(false);
 	const [mined, setMined] = useState(false);
+	const [newContractAddress, setNewContractAddress] = useState('');
 	const [transactionHash, setTransactionHash] = useState('');
 
 	const formatAppointments = (appointmentData) => {
@@ -74,7 +76,7 @@ const Calender = ({ account }) => {
 	const getData = async () => {
 		const deCalendContract = getContractReadOnly();
 		const owner = await deCalendContract.owner();
-		console.log('Blah is', owner);
+		console.log('Owner is ', owner);
 		console.log('account', account);
 		if (owner.toString().toLowerCase() === account.toString().toLowerCase()) {
 			setIsAdmin(true);
@@ -86,6 +88,23 @@ const Calender = ({ account }) => {
 		const data = await deCalendContract.getAppointments();
 		console.log('Appointments', data);
 		formatAppointments(data);
+	};
+
+	const deployNewContract = async () => {
+		const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+		const factory = new ethers.ContractFactory(
+			contract.abi,
+			contract.bytecode,
+			provider.getSigner()
+		);
+
+		const deployedContract = await factory.deploy();
+
+		await deployedContract.deployTransaction.wait();
+
+		console.log('new contract address is : ', deployedContract.address);
+		setNewContractAddress(deployedContract.address);
 	};
 
 	useEffect(() => {
@@ -169,6 +188,15 @@ const Calender = ({ account }) => {
 				</Scheduler>
 			</div>
 			{showDialog && <ConfirmDialog />}
+			<Button
+				variant="contained"
+				onClick={deployNewContract}
+				startIcon={<SettingsSuggestIcon />}
+				style={{ marginTop: '20px', marginBottom: '20px' }}
+			>
+				Deploy
+			</Button>
+			<p className="text-white text-2xl">{newContractAddress}</p>
 		</>
 	);
 };
